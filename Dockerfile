@@ -27,6 +27,8 @@ RUN apt-get install -y build-essential yasm git libpcap0.8 libpcap-dev pkg-confi
   mkdir /usr/share/johntheripper && \
   mv /root/src/john/run/* /usr/share/johntheripper/ && \
   rm -rf /root/src && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
   adduser --home /home/ripper --disabled-password --gecos "" ripper
 
 ENV PATH=$PATH:/usr/share/johntheripper
