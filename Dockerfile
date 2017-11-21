@@ -55,6 +55,7 @@ RUN apt-get update && \
 COPY --from=build /root/src/rexgen/build/librexgen /usr/local/lib/
 COPY --from=build /root/src/rexgen/build/rexgen/rexgen /usr/bin/
 COPY --from=build /root/src/john/run /usr/share/johntheripper
+COPY --from=build /root/src/john/src/opencl/* /usr/share/johntheripper/kernels/
 
 # Locale settings
 RUN echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen; locale-gen
@@ -86,6 +87,9 @@ RUN apt-get install -y libpcap0.8 \
 USER ripper
 WORKDIR /home/ripper
 
-RUN touch john.conf
+#profile setup
+RUN echo "[Options:OpenCL]" >> john.conf && \
+    echo "AutotuneLWS = 1" >> john.conf && \
+    cp -r /usr/share/johntheripper/kernels/ ./
 
 ENTRYPOINT ["john"]
