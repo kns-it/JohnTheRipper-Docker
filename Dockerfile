@@ -43,7 +43,7 @@ RUN mkdir -p ~/src && \
     cd ~/src && \
     git clone git://github.com/magnumripper/JohnTheRipper -b bleeding-jumbo john && \
     cd john/src && \
-    ./configure --enable-mpi && \
+    ./configure --prefix=/usr --enable-pkg-config --enable-pcap --enable-mpi && \
     make -s clean && \
     make -sj8
 
@@ -54,19 +54,19 @@ RUN apt-get update && \
 
 COPY --from=build /root/src/rexgen/build/librexgen /usr/local/lib/
 COPY --from=build /root/src/rexgen/build/rexgen/rexgen /usr/bin/
-COPY --from=build /root/src/john/run /usr/share/johntheripper
-COPY --from=build /root/src/john/src/opencl/* /usr/share/johntheripper/kernels/
+COPY --from=build /root/src/john/run /usr/share/john
+COPY --from=build /root/src/john/src/opencl/* /usr/share/v/kernels/
 
 # Locale settings
 RUN echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen; locale-gen
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-ENV PATH=$PATH:/usr/share/johntheripper
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/librexgen/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
-ENV JOHN=/usr/share/johntheripper
+ENV JOHN=/etc/john
 
-ADD setup.sh /usr/bin/
+ADD john.conf /etc/john/
+ADD john.local.conf /etc/john/
 
 RUN apt-get install -y libpcap0.8 \
     libbz2-1.0 \
@@ -81,14 +81,33 @@ RUN apt-get install -y libpcap0.8 \
     ocl-icd-libopencl1 && \
     mkdir -p /etc/OpenCL/vendors && \
     echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd && \
-    adduser --home /home/ripper --disabled-password --gecos "" ripper  && \
-    cp /usr/share/johntheripper/john.bash_completion /etc/bash_completion.d/ && \
-    apt-get clean && \
-    rm -rf /var/cache/apt/* && \
-    chown -R john /usr/share/johntheripper && \
-    chmod +x /usr/bin/setup.sh
+    adduser --home /home/john --disabled-password --gecos "" john  && \
+    cp /usr/share/john/john.bash_completion /etc/bash_completion.d/ && \
+    apt-get clean
 
-USER ripper
-WORKDIR /home/ripper
+RUN mv /usr/share/john/john /usr/bin/ && \
+    mv /usr/share/john/calc_stat /usr/bin/ && \
+    mv /usr/share/john/cprepair /usr/bin/ && \
+    mv /usr/share/john/genmkvpwd /usr/bin/ && \
+    mv /usr/share/john/mkvcalcproba /usr/bin/ && \
+    mv /usr/share/john/raw2dyna /usr/bin/ && \
+    mv /usr/share/john/relbench /usr/bin/ && \
+    mv /usr/share/john/tgtsnarf /usr/bin/ && \
+    mv /usr/share/john/uaf2john /usr/bin/ && \
+    mv /usr/share/john/wpapcap2john /usr/bin/ && \
+    mv /usr/share/john/vncpcap2john /usr/bin/ && \
+    mv /usr/share/john/SIPdump /usr/bin/ && \
+    mkdir /usr/lib/john && \
+    mv /usr/share/john/*.py /usr/lib/john/ && \
+    mv /usr/share/john/*.pl /usr/lib/john/ && \
+    mv /usr/share/john/*.rb /usr/lib/john/ && \
+    mv /usr/share/john/mailer /usr/lib/john/ && \
+    mv /usr/share/john/benchmark-unify /usr/lib/john/ && \
+    rm -rf /var/cache/apt/* && \
+    rm -f /usr/share/john/john.conf /usr/share/john/john.local.conf
+
+USER john
+
+WORKDIR /home/john
 
 ENTRYPOINT ["/bin/bash"]
