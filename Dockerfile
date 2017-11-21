@@ -86,17 +86,17 @@ RUN apt-get install -y libpcap0.8 \
     apt-get clean
 
 RUN mv /usr/share/john/john /usr/bin/ && \
-    mv /usr/share/john/calc_stat /usr/bin/ && \
-    mv /usr/share/john/cprepair /usr/bin/ && \
-    mv /usr/share/john/genmkvpwd /usr/bin/ && \
-    mv /usr/share/john/mkvcalcproba /usr/bin/ && \
-    mv /usr/share/john/raw2dyna /usr/bin/ && \
-    mv /usr/share/john/relbench /usr/bin/ && \
-    mv /usr/share/john/tgtsnarf /usr/bin/ && \
-    mv /usr/share/john/uaf2john /usr/bin/ && \
-    mv /usr/share/john/wpapcap2john /usr/bin/ && \
-    mv /usr/share/john/vncpcap2john /usr/bin/ && \
-    mv /usr/share/john/SIPdump /usr/bin/ && \
+    ln -s john /usr/bin/calc_stat && \
+    ln -s john /usr/bin/cprepair && \
+    ln -s john /usr/bin/genmkvpwd && \
+    ln -s john /usr/bin/mkvcalcproba && \
+    ln -s john /usr/bin/raw2dyna && \
+    ln -s john /usr/bin/relbench && \
+    ln -s john /usr/bin/tgtsnarf && \
+    ln -s john /usr/bin/uaf2john && \
+    ln -s john /usr/bin/wpapcap2john && \
+    ln -s john /usr/bin/vncpcap2john && \
+    ln -s john /usr/bin/SIPdump && \
     mkdir /usr/lib/john && \
     mv /usr/share/john/*.py /usr/lib/john/ && \
     mv /usr/share/john/*.pl /usr/lib/john/ && \
