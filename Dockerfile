@@ -9,20 +9,43 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/librexgen/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/librexgen/
 
-RUN apt-get install -y build-essential yasm git libpcap0.8 libpcap-dev pkg-config libbz2-1.0 libbz2-dev libssl1.0.0 libssl-dev libgmp10 libgmp-dev libkrb5-3 libkrb5-dev libnss3 libnss3-dev libopenmpi1.10 libopenmpi-dev openmpi-bin cmake bison flex libicu55 libicu-dev nvidia-cuda-toolkit && \
-   mkdir -p ~/src && \
-   cd ~/src && \
-   git clone --recursive https://github.com/teeshop/rexgen.git && \
-   cd rexgen && \
-   ./build.sh && \
-   cd ~/src && \
-   git clone git://github.com/magnumripper/JohnTheRipper -b bleeding-jumbo john && \
-   cd john/src && \
-   ./configure --enable-mpi && \
-   make -s clean && \
-   make -sj8
+RUN apt-get install -y build-essential \
+    yasm \
+    git \
+    libpcap0.8 libpcap-dev \
+    pkg-config \
+    libbz2-1.0 libbz2-dev \
+    libssl1.0.0 libssl-dev \
+    libgmp10 libgmp-dev \
+    libkrb5-3 libkrb5-dev \
+    libnss3 libnss3-dev \
+    libopenmpi1.10 libopenmpi-dev openmpi-bin \
+    cmake \
+    bison \
+    flex \
+    libicu55 libicu-dev
+
+RUN apt-get install -y ocl-icd-libopencl1 \
+    nvidia-opencl-dev && \
+    mkdir -p /etc/OpenCL/vendors && \
+    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+
+RUN mkdir -p ~/src && \
+    cd ~/src && \
+    git clone --recursive https://github.com/teeshop/rexgen.git && \
+    cd rexgen && \
+    sed -i -e 's/sudo//g' install.sh && \
+    ./build.sh && \
+    ./install.sh && \
+    ldconfig && \
+    cd ~/src && \
+    git clone git://github.com/magnumripper/JohnTheRipper -b bleeding-jumbo john && \
+    cd john/src && \
+    ./configure --enable-mpi && \
+    make -s clean && \
+    make -sj8
 
 FROM nvidia/cuda:8.0-runtime
 
@@ -39,16 +62,30 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV PATH=$PATH:/usr/share/johntheripper
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/librexgen/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/librexgen/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 ENV JOHN=/usr/share/johntheripper
 
-RUN apt-get install -y libpcap0.8 libbz2-1.0 libssl1.0.0 libgmp10 libkrb5-3 libnss3 libopenmpi1.10 openmpi-bin bison flex libicu55 && \
-   adduser --home /home/ripper --disabled-password --gecos "" ripper  && \
-   ldconfig && \
-   cp /usr/share/johntheripper/john.bash_completion /etc/bash_completion.d/ && \
-   apt-get clean && \
-   rm -rf /var/cache/apt/*
+RUN apt-get install -y libpcap0.8 \
+    libbz2-1.0 \
+    libssl1.0.0 \
+    libgmp10 \
+    libkrb5-3 \
+    libnss3 \
+    libopenmpi1.10 openmpi-bin \
+    bison \
+    flex \
+    libicu55 \
+    ocl-icd-libopencl1 && \
+    mkdir -p /etc/OpenCL/vendors && \
+    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd && \
+    adduser --home /home/ripper --disabled-password --gecos "" ripper  && \
+    cp /usr/share/johntheripper/john.bash_completion /etc/bash_completion.d/ && \
+    apt-get clean && \
+    rm -rf /var/cache/apt/*
 
 USER ripper
+WORKDIR /home/ripper
+
+RUN touch john.conf
 
 ENTRYPOINT ["john"]

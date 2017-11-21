@@ -1,1 +1,5 @@
 start-john.sh
+LICENSE
+.gitignore
+README.md
+docker-compose.yml
