@@ -66,6 +66,8 @@ ENV PATH=$PATH:/usr/share/johntheripper
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/librexgen/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 ENV JOHN=/usr/share/johntheripper
 
+ADD setup.sh /usr/bin/
+
 RUN apt-get install -y libpcap0.8 \
     libbz2-1.0 \
     libssl1.0.0 \
@@ -82,14 +84,11 @@ RUN apt-get install -y libpcap0.8 \
     adduser --home /home/ripper --disabled-password --gecos "" ripper  && \
     cp /usr/share/johntheripper/john.bash_completion /etc/bash_completion.d/ && \
     apt-get clean && \
-    rm -rf /var/cache/apt/*
+    rm -rf /var/cache/apt/* && \
+    chown -R john /usr/share/johntheripper && \
+    chmod +x /usr/bin/setup.sh
 
 USER ripper
 WORKDIR /home/ripper
 
-#profile setup
-RUN echo "[Options:OpenCL]" >> john.conf && \
-    echo "AutotuneLWS = 1" >> john.conf && \
-    cp -r /usr/share/johntheripper/kernels/ ./
-
-ENTRYPOINT ["john"]
+ENTRYPOINT ["/bin/bash"]
